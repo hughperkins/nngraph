@@ -245,17 +245,22 @@ function gModule:runForwardFunction(func,input)
 			else
 				output = func(node.data.module,input)
         local sumoutput = output:sum()
-        if sumoutput ~= sumoutput then
+        if node.id == 36 or sumoutput ~= sumoutput then
           print('output is nan!')
           print('node is:')
           print(node.data.module)
           print('node.id', node.id, 'node.name', node.name)
-          print('num inputs', #input)
-          for i=1,#input do
-            print('  input', i)
-            print('    type', torch.type(input[i]))
-            print('    size', input[i]:size())
-            print('    sum', input[i]:sum())
+          graph.dot(self.fg, 'error dump','error.fg.svg')
+          print('torch.type(input)', torch.type(input))
+          print('input:size()', input:size())
+          print('#node.data.mapindex', #node.data.mapindex)
+          for i=1,#node.data.mapindex do
+            local input = node.data.mapindex[i]
+            print('  mapindex', i)
+            local childnode = node.data.mapindex[i]
+            print('    type', torch.type(childnode.module))
+--            print('    size', childnode.modul:size())
+--            print('    sum', childnode:sum())
           end
           error('output is nan, during forward pass, aborting...')
         end
