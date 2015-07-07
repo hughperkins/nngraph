@@ -244,6 +244,21 @@ function gModule:runForwardFunction(func,input)
 				output = input
 			else
 				output = func(node.data.module,input)
+        local sumoutput = output:sum()
+        if sumoutput ~= sumoutput then
+          print('output is nan!')
+          print('node is:')
+          print(node.data.module)
+          print('node.id', node.id, 'node.name', node.name)
+          print('num inputs', #input)
+          for i=1,#input do
+            print('  input', i)
+            print('    type', torch.type(input[i]))
+            print('    size', input[i]:size())
+            print('    sum', input[i]:sum())
+          end
+          error('output is nan, during forward pass, aborting...')
+        end
 			end
 			-- propagate the output to children
 			propagate(node,output)
