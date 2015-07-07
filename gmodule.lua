@@ -245,24 +245,26 @@ function gModule:runForwardFunction(func,input)
 			else
 				output = func(node.data.module,input)
         local sumoutput = output:sum()
-        if sumoutput ~= sumoutput then
-          print('output is nan!')
-          print('node is:')
-          print(node.data.module)
-          print('node.id', node.id, 'node.name', node.name)
-          graph.dot(self.fg, 'error dump','error.fg.svg')
-          print('torch.type(input)', torch.type(input))
-          print('input:size()', input:size())
-          print('#node.data.mapindex', #node.data.mapindex)
-          for i=1,#node.data.mapindex do
-            local input = node.data.mapindex[i]
-            print('  mapindex', i)
-            local childnode = node.data.mapindex[i]
-            print('    type', torch.type(childnode.module))
---            print('    size', childnode.modul:size())
---            print('    sum', childnode:sum())
+        if os.getenv('CHECKED') == '1' then
+          if sumoutput ~= sumoutput then
+            print('output is nan!')
+            print('node is:')
+            print(node.data.module)
+            print('node.id', node.id, 'node.name', node.name)
+            graph.dot(self.fg, 'error dump','error.fg.svg')
+            print('torch.type(input)', torch.type(input))
+            print('input:size()', input:size())
+            print('#node.data.mapindex', #node.data.mapindex)
+            for i=1,#node.data.mapindex do
+              local input = node.data.mapindex[i]
+              print('  mapindex', i)
+              local childnode = node.data.mapindex[i]
+              print('    type', torch.type(childnode.module))
+  --            print('    size', childnode.modul:size())
+  --            print('    sum', childnode:sum())
+            end
+            error('output is nan, during forward pass, aborting...')
           end
-          error('output is nan, during forward pass, aborting...')
         end
 			end
 			-- propagate the output to children
@@ -330,6 +332,43 @@ function gModule:updateGradInput(input,gradOutput)
 				end
 				local module = node.data.module
 				gradInput = module:updateGradInput(input,gradOutput)
+        if os.getenv('CHECKED') == '1' then
+--          print('checking backwards module', node.id, ' ...', module)
+--          print('gradInput info', torch.type(gradInput))
+          local sumGradInput = 0
+          if torch.type(gradInput) == 'table' then
+            -- check each part of table
+            for i=1,#gradInput do
+              local thisSum = gradInput[i]:sum()
+              if thisSum ~= thisSum then
+                print('gradInput table item ' .. i .. ' contains NaN')
+              end
+--              print('thisSum', torch.type(thisSum), thisSum)
+              sumGradInput = sumGradInput + thisSum
+            end
+          else
+            sumGradInput = gradInput:sum()
+          end
+          if (os.getenv('MOCKING') == '1' and node.id == 36 ) or sumGradInput ~= sumGradInput then
+            print('gradInput contains nan -> dumping diag info, then aborting')
+            print('node is:')
+            print(node.data.module)
+            print('node.id', node.id, 'node.name', node.name)
+            graph.dot(self.bg, 'error dump','error.bg.svg')
+    --        print('torch.type(input)', torch.type(input))
+    --        print('input:size()', input:size())
+    --        print('#node.data.mapindex', #node.data.mapindex)
+    --        for i=1,#node.data.mapindex do
+    --          local input = node.data.mapindex[i]
+    --          print('  mapindex', i)
+    --          local childnode = node.data.mapindex[i]
+    --          print('    type', torch.type(childnode.module))
+    ----            print('    size', childnode.modul:size())
+    ----            print('    sum', childnode:sum())
+    --        end
+            error('gradInput is nan, during backward pass, aborting...')
+          end
+        end
 			end
 			-- propagate the output to children
 			for i,child in ipairs(node.children) do
@@ -385,6 +424,7 @@ function gModule:accGradParameters(input,gradOutput,lr)
 			end
 			-- accGradParameters through this node
 			module:accGradParameters(input,gradOutput,lr)
+      if false then -- remove backwards checking for now, since sllloooowwww
       local sumparams = module:getParameters():sum()
       print('checking backwards module', node.id, ' ...')
       if sumparams ~= sumparams then
@@ -405,6 +445,7 @@ function gModule:accGradParameters(input,gradOutput,lr)
 ----            print('    sum', childnode:sum())
 --        end
         error('params are nan, during backward pass, aborting...')
+      end
       end
 		end
 		if self.verbose then
