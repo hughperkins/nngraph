@@ -245,7 +245,7 @@ function gModule:runForwardFunction(func,input)
 			else
 				output = func(node.data.module,input)
         local sumoutput = output:sum()
-        if node.id == 36 or sumoutput ~= sumoutput then
+        if sumoutput ~= sumoutput then
           print('output is nan!')
           print('node is:')
           print(node.data.module)
@@ -385,6 +385,27 @@ function gModule:accGradParameters(input,gradOutput,lr)
 			end
 			-- accGradParameters through this node
 			module:accGradParameters(input,gradOutput,lr)
+      local sumparams = module:getParameters():sum()
+      print('checking backwards module', node.id, ' ...')
+      if sumparams ~= sumparams then
+        print('params are nan!')
+        print('node is:')
+        print(node.data.module)
+        print('node.id', node.id, 'node.name', node.name)
+        graph.dot(self.bg, 'error dump','error.bg.svg')
+--        print('torch.type(input)', torch.type(input))
+--        print('input:size()', input:size())
+--        print('#node.data.mapindex', #node.data.mapindex)
+--        for i=1,#node.data.mapindex do
+--          local input = node.data.mapindex[i]
+--          print('  mapindex', i)
+--          local childnode = node.data.mapindex[i]
+--          print('    type', torch.type(childnode.module))
+----            print('    size', childnode.modul:size())
+----            print('    sum', childnode:sum())
+--        end
+        error('params are nan, during backward pass, aborting...')
+      end
 		end
 		if self.verbose then
 			print(' V : ' .. node:label())
