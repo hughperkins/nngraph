@@ -203,6 +203,16 @@ function gModule:updateOutput(input)
 	return self:runForwardFunction('updateOutput',input)
 end
 
+local function dumpTensor(name, tensor)
+   print('====================================')
+   print('tensor', name)
+   print('   size', tensor:size())
+   print('   stride', tensor:stride())
+   print('   sum', torch.sum(tensor))
+   print('   nelement', tensor:nElement())
+   torch.save(name .. '.dat', tensor)
+end
+
 function gModule:runForwardFunction(func,input)
 	if type(func) == "string" then
 		local func_name = func
@@ -251,21 +261,24 @@ function gModule:runForwardFunction(func,input)
             print('output is nan.  Dumping diag info, then aborting')
             print('  node.id', node.id, 'node.name', node.name)
             print('  ', node.data.module)
+            dumpTensor('input', input)
+            dumpTensor('weight', node.data.module.weight)
+            dumpTensor('bias', node.data.module.bias)
             graph.dot(self.fg, 'error dump','error.fg.svg')
-            print('  torch.type(input)', torch.type(input))
-            print('  input:size()', input:size())
-            print('  input:sum()', input:sum())
-            print('  weight:sum()', node.data.module.weight:sum())
-            print('  bias:sum()', node.data.module.bias:sum())
-            print('  #node.data.mapindex', #node.data.mapindex)
-            for i=1,#node.data.mapindex do
-              local input = node.data.mapindex[i]
-              print('    mapindex', i)
-              local childnode = node.data.mapindex[i]
-              print('    type', torch.type(childnode.module))
-  --            print('    size', childnode.modul:size())
-  --            print('    sum', childnode:sum())
-            end
+--            print('  torch.type(input)', torch.type(input))
+--            print('  input:size()', input:size())
+--            print('  input:sum()', input:sum())
+--            print('  weight:sum()', node.data.module.weight:sum())
+--            print('  bias:sum()', node.data.module.bias:sum())
+--            print('  #node.data.mapindex', #node.data.mapindex)
+--            for i=1,#node.data.mapindex do
+--              local input = node.data.mapindex[i]
+--              print('    mapindex', i)
+--              local childnode = node.data.mapindex[i]
+--              print('    type', torch.type(childnode.module))
+--  --            print('    size', childnode.modul:size())
+--  --            print('    sum', childnode:sum())
+--            end
             error('output is nan, during forward pass, aborting...')
           end
         end
