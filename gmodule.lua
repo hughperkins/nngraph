@@ -5,6 +5,19 @@ local istensor = utils.istensor
 local istable = utils.istable
 local istorchclass = utils.istorchclass
 
+local OPT_CHECKED = os.getenv('CHECKED') == '1'
+local OPT_MOCKFGFAILURE = os.getenv('MOCKFGFAILURE') == '1'
+local OPT_MOCKBGFAILURE = os.getenv('MOCKBGFAILURE') == '1'
+if OPT_CHECKED then
+  print('option CHECKED activated')
+end
+if OPT_MOCKFGFAILURE then
+  print('option MOCKFGFAILURE activated')
+end
+if OPT_MOCKBGFAILURE then
+  print('option MOCKBGFAILURE activated')
+end
+
 local function getTotalGradOutput(node)
 	local gradOutput = node.data.gradOutput
 	assert(istable(gradOutput), "expecting gradients to sum")
@@ -254,9 +267,9 @@ function gModule:runForwardFunction(func,input)
 				output = input
 			else
 				output = func(node.data.module,input)
-        if os.getenv('CHECKED') == '1' then
+        if OPT_CHECKED then
           local sumoutput = output:sum()
-          if (os.getenv('MOCKFGFAILURE') == '1' and node.id == 36) or sumoutput ~= sumoutput then
+          if (OPT_MOCKFGFAILURE and node.id == 36) or sumoutput ~= sumoutput then
             print('check v0.5')
             print('output is nan.  Dumping diag info, then aborting')
             print('  node.id', node.id, 'node.name', node.name)
@@ -349,7 +362,7 @@ function gModule:updateGradInput(input,gradOutput)
 				end
 				local module = node.data.module
 				gradInput = module:updateGradInput(input,gradOutput)
-        if os.getenv('CHECKED') == '1' then
+        if OPT_CHECKED then
 --          print('checking backwards module', node.id, ' ...', module)
 --          print('gradInput info', torch.type(gradInput))
           local sumGradInput = 0
@@ -366,7 +379,7 @@ function gModule:updateGradInput(input,gradOutput)
           else
             sumGradInput = gradInput:sum()
           end
-          if (os.getenv('MOCKING') == '1' and node.id == 36 ) or sumGradInput ~= sumGradInput then
+          if (OPT_MOCKBGFAILURE and node.id == 36 ) or sumGradInput ~= sumGradInput then
             print('gradInput contains nan -> dumping diag info, then aborting')
             print('node is:')
             print(node.data.module)
