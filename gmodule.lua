@@ -247,12 +247,16 @@ function gModule:runForwardFunction(func,input)
         if os.getenv('CHECKED') == '1' then
           local sumoutput = output:sum()
           if (os.getenv('MOCKFGFAILURE') == '1' and node.id == 36) or sumoutput ~= sumoutput then
+            print('check v0.3')
             print('output is nan.  Dumping diag info, then aborting')
             print('  node.id', node.id, 'node.name', node.name)
             print('  ', node.data.module)
             graph.dot(self.fg, 'error dump','error.fg.svg')
             print('  torch.type(input)', torch.type(input))
             print('  input:size()', input:size())
+            print('  input:sum()', input:sum())
+            print('  weight:sum()', node.data.module.weight:sum())
+            print('  bias:sum()', node.data.module.bias:sum())
             print('  #node.data.mapindex', #node.data.mapindex)
             for i=1,#node.data.mapindex do
               local input = node.data.mapindex[i]
