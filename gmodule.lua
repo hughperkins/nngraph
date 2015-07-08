@@ -244,20 +244,19 @@ function gModule:runForwardFunction(func,input)
 				output = input
 			else
 				output = func(node.data.module,input)
-        local sumoutput = output:sum()
         if os.getenv('CHECKED') == '1' then
-          if sumoutput ~= sumoutput then
-            print('output is nan!')
-            print('node is:')
-            print(node.data.module)
-            print('node.id', node.id, 'node.name', node.name)
+          local sumoutput = output:sum()
+          if (os.getenv('MOCKFGFAILURE') == '1' and node.id == 36) or sumoutput ~= sumoutput then
+            print('output is nan.  Dumping diag info, then aborting')
+            print('  node.id', node.id, 'node.name', node.name)
+            print('  ', node.data.module)
             graph.dot(self.fg, 'error dump','error.fg.svg')
-            print('torch.type(input)', torch.type(input))
-            print('input:size()', input:size())
-            print('#node.data.mapindex', #node.data.mapindex)
+            print('  torch.type(input)', torch.type(input))
+            print('  input:size()', input:size())
+            print('  #node.data.mapindex', #node.data.mapindex)
             for i=1,#node.data.mapindex do
               local input = node.data.mapindex[i]
-              print('  mapindex', i)
+              print('    mapindex', i)
               local childnode = node.data.mapindex[i]
               print('    type', torch.type(childnode.module))
   --            print('    size', childnode.modul:size())
