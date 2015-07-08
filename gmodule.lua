@@ -257,7 +257,7 @@ function gModule:runForwardFunction(func,input)
         if os.getenv('CHECKED') == '1' then
           local sumoutput = output:sum()
           if (os.getenv('MOCKFGFAILURE') == '1' and node.id == 36) or sumoutput ~= sumoutput then
-            print('check v0.3')
+            print('check v0.4')
             print('output is nan.  Dumping diag info, then aborting')
             print('  node.id', node.id, 'node.name', node.name)
             print('  ', node.data.module)
